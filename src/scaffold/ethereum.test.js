@@ -77,6 +77,7 @@ const scaffoldOptions = {
   contract: '0xf87e31492faf9a91b02ee0deaad50d51d56d5d4d',
   network: 'kovan',
   contractName: 'Contract',
+  dataSourceName: 'Contract'
 }
 
 const scaffold = new Scaffold(scaffoldOptions)
@@ -116,7 +117,7 @@ dataSources:
           handler: handleExampleEvent
         - event: ExampleEvent(bytes32)
           handler: handleExampleEvent1
-      file: ./src/mapping.ts
+      file: ./src/contract.ts
 `)
   })
 

@@ -1,5 +1,6 @@
 const prettier = require('prettier')
 const pkginfo = require('pkginfo')(module)
+const { strings } = require('gluegun')
 
 const GRAPH_CLI_VERSION = process.env.GRAPH_CLI_TESTS
   // JSON.stringify should remove this key, we will install the local
@@ -25,6 +26,7 @@ module.exports = class Scaffold {
     this.network = options.network
     this.contractName = options.contractName
     this.subgraphName = options.subgraphName
+    this.dataSourceName = options.dataSourceName
     this.node = options.node
   }
 
@@ -50,7 +52,7 @@ module.exports = class Scaffold {
         },
         dependencies: {
           '@graphprotocol/graph-cli': GRAPH_CLI_VERSION,
-          '@graphprotocol/graph-ts': `0.24.1`,
+          '@graphprotocol/graph-ts': `0.27.0`,
         },
       }),
       { parser: 'json' },
@@ -66,7 +68,7 @@ schema:
   file: ./schema.graphql
 dataSources:
   - kind: ${this.protocol.name}
-    name: ${this.contractName}
+    name: ${this.dataSourceName}
     network: ${this.network}
     source: ${protocolManifest.source(this)}
     mapping: ${protocolManifest.mapping(this)}
@@ -142,7 +144,7 @@ dataSources:
       'subgraph.yaml': this.generateManifest(),
       'schema.graphql': this.generateSchema(),
       'tsconfig.json': this.generateTsConfig(),
-      src: { 'mapping.ts': this.generateMapping() },
+      src: { [`${strings.kebabCase(this.contractName)}.ts`]: this.generateMapping() },
       abis: this.generateABIs(),
     }
   }

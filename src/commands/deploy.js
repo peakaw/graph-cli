@@ -30,6 +30,7 @@ Options:
   -l  --version-label <label>   Version label used for the deployment
   -h, --help                    Show usage information
   -i, --ipfs <node>             Upload build results to an IPFS node (default: ${DEFAULT_IPFS_URL})
+      --debug-fork              ID of a remote subgraph whose store will be GraphQL queried
   -o, --output-dir <path>       Output directory for build results (default: build/)
       --skip-migrations         Skip subgraph migrations (default: false)
   -w, --watch                   Regenerate types when subgraph files change (default: false)
@@ -96,6 +97,7 @@ module.exports = {
       skipMigrations,
       w,
       watch,
+      debugFork,
     } = toolbox.parameters.options
 
     // Support both long and short option variants
@@ -198,7 +200,7 @@ module.exports = {
       // because that would mean the CLI would try to compile code
       // using the wrong AssemblyScript compiler.
       await assertManifestApiVersion(manifest, '0.0.5')
-      await assertGraphTsVersion(path.dirname(manifest), '0.22.0')
+      await assertGraphTsVersion(path.dirname(manifest), '0.25.0')
 
       const dataSourcesAndTemplates = await DataSourcesExtractor.fromFilePath(manifest)
 
@@ -264,7 +266,7 @@ module.exports = {
       //       `Failed to deploy to Graph node ${requestUrl}`,
       client.request(
         'subgraph_deploy',
-        { name: subgraphName, ipfs_hash: ipfsHash, version_label: versionLabel },
+        { name: subgraphName, ipfs_hash: ipfsHash, version_label: versionLabel, debug_fork: debugFork },
         async (requestError, jsonRpcError, res) => {
           if (jsonRpcError) {
             spinner.fail(
@@ -292,7 +294,6 @@ $ graph create --node ${node} ${subgraphName}`)
             const base = requestUrl.protocol + '//' + requestUrl.hostname
             let playground = res.playground
             let queries = res.queries
-            let subscriptions = res.subscriptions
 
             // Add a base URL if graph-node did not return the full URL
             if (playground.charAt(0) === ':') {
@@ -300,9 +301,6 @@ $ graph create --node ${node} ${subgraphName}`)
             }
             if (queries.charAt(0) === ':') {
               queries = base + queries
-            }
-            if (subscriptions.charAt(0) === ':') {
-              subscriptions = base + subscriptions
             }
 
             if (isHostedService) {
@@ -316,7 +314,6 @@ $ graph create --node ${node} ${subgraphName}`)
             }
             print.info('\nSubgraph endpoints:')
             print.info(`Queries (HTTP):     ${queries}`)
-            print.info(`Subscriptions (WS): ${subscriptions}`)
             print.info(``)
           }
         },

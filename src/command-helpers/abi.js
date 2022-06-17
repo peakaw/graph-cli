@@ -8,22 +8,32 @@ const loadAbiFromEtherscan = async (ABI, network, address) =>
     `Failed to fetch ABI from Etherscan`,
     `Warnings while fetching ABI from Etherscan`,
     async spinner => {
-      const scanApiUrl = getEtherscanLikeAPIUrl(network);
-      let result = await fetch(
-        `${scanApiUrl}?module=contract&action=getabi&address=${address}`,
-      )
-      let json = await result.json()
-
-      // Etherscan returns a JSON object that has a `status`, a `message` and
-      // a `result` field. The `status` is '0' in case of errors and '1' in
-      // case of success
-      if (json.status === '1') {
-        return new ABI('Contract', undefined, immutable.fromJS(JSON.parse(json.result)))
-      } else {
-        throw new Error('ABI not found, try loading it from a local file')
-      }
+      const jsonResult = await fetchABI(ABI, network, address)
+      return new ABI('Contract', undefined, immutable.fromJS(JSON.parse(jsonResult)))
     },
   )
+
+const fetchABI = async (network, address) => {
+  const scanApiUrl = getEtherscanLikeAPIUrl(network);
+  let result = await fetch(
+    `${scanApiUrl}?module=contract&action=getabi&address=${address}`,
+  )
+  console.log('result:')
+  console.log(result)
+  let json = await result.json()
+
+  console.log('json:')
+  console.log(json.result)
+
+  // Etherscan returns a JSON object that has a `status`, a `message` and
+  // a `result` field. The `status` is '0' in case of errors and '1' in
+  // case of success
+  if (json.status === '1') {
+    return json.result
+  } else {
+    throw new Error('ABI not found, try loading it from a local file')
+  }
+}
 
 const loadAbiFromBlockScout = async (ABI, network, address) =>
   await withSpinner(
@@ -62,6 +72,12 @@ const getEtherscanLikeAPIUrl = (network) => {
     case "optimism": return `https://api-optimistic.etherscan.io/api`
     case "avalanche": return `https://api.snowtrace.io/api`;
     case "fuji": return `https://api-testnet.snowtrace.io/api`;
+    // case "harmony": return `https://api.harmony.one/api`;
+    // case "harmony": return `https://api.harmony.one`;
+    // case "harmony": return `https://api.s0.t.hmny.io`;
+    // case "harmony": return `https://api.s0.t.hmny.io/api`;
+    // case "harmony": return `https://harmony-mainnet.chainstacklabs.com`;
+    case "harmony": return `https://harmony-mainnet.chainstacklabs.com/api`;
     default: return `https://api-${network}.etherscan.io/api`
   }
 }
@@ -69,4 +85,5 @@ const getEtherscanLikeAPIUrl = (network) => {
 module.exports = {
   loadAbiFromEtherscan,
   loadAbiFromBlockScout,
+  fetchABI,
 }

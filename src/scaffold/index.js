@@ -108,6 +108,7 @@ dataSources:
   generateMapping() {
     const hasEvents = this.protocol.hasEvents()
     const events = hasEvents ? abiEvents(this.abi).toJS() : []
+    const protocolMapping = this.protocol.getMappingScaffold()
 
     return prettier.format(
       hasEvents && this.indexEvents
